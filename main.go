@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -16,6 +17,7 @@ type product struct {
 
 func main() {
 	db, err := sql.Open("sqlite3", "crm.db")
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,10 +35,11 @@ func main() {
 		products = append(products, p)
 	}
 
-	fmt.Println(products)
+	http.HandleFunc("/", productsHandler)
+	log.Println("Crm started...")
+	log.Fatal(http.ListenAndServe(":80", nil))
+}
 
-	fmt.Printf("%2s\t%20s\t%s\n", "Id", "Name", "Quantity")
-	for _, p := range products {
-		fmt.Printf("%2d\t%20s\t%3d\n", p.Id, p.Name, p.Quantity)
-	}
+func productsHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, World")
 }
