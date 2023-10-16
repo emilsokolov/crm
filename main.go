@@ -3,43 +3,73 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type product struct {
-	Id       int
-	Name     string
-	Quantity int
+type ProductPageData struct {
+	Title    string
+	Products []Product
 }
 
+var db *sql.DB
+
 func main() {
-	db, err := sql.Open("sqlite3", "crm.db")
-
+	var err error
+	db, err = sql.Open("sqlite3", "crm.db")
 	if err != nil {
 		log.Fatal(err)
 	}
-	rows, err := db.Query("select id, name, quantity from products;")
-	if err != nil {
-		log.Fatal(err)
-	}
-	var products []product
-	for rows.Next() {
-		p := product{}
-		err = rows.Scan(&p.Id, &p.Name, &p.Quantity)
-		if err != nil {
-			log.Fatal(err)
-		}
-		products = append(products, p)
-	}
 
-	http.HandleFunc("/", productsHandler)
+	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/product", productHandler)
+	http.HandleFunc("/edit", editHandler)
 	log.Println("Crm started...")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
-func productsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, World")
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	products, err := getProducts()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t, err := template.ParseFiles("products.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := ProductPageData{
+		Title:    "Все товары",
+		Products: products,
+	}
+
+	t.Execute(w, data)
+}
+
+func productHandler(w http.ResponseWriter, r *http.Request) {
+	idString := r.URL.Query().Get("id")
+	i, err := strconv.ParseInt(idString, 10, 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+	id := int(i)
+	product, err := getProduct(id)
+	if err != nil {
+		if err.Error() == "Product Not Found" {
+			fmt.Fprintf(w, "Product Not Found")
+		} else {
+			log.Fatal(err)
+		}
+	}
+	fmt.Fprintf(w, "Наименование = %s, Остаток = %d, Закупка: %d, Продажа: %d",
+		product.Name, product.Quantity, product.PurchasePrice, product.SellPrice)
+}
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Edit")
 }

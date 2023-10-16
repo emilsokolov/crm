@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<head>
+    <title>{{.Title}}</title>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+        </tr>
+        {{range .Products}}
+        <tr>
+            <td><a href="/product?id={{.Id}}">{{.Name}}<a></td>
+            <td>{{.Quantity}}</td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+
+</html>
