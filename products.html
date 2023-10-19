@@ -12,9 +12,11 @@
         </tr>
         {{range .Products}}
         <tr>
-            <td><a href="/product?id={{.Id}}">{{.Name}}<a></td>
+            <td><a href="/products/{{.Id}}">{{.Name}}<a></td>
             <td>{{.Quantity}}</td>
+            <td><a href="/products/{{.Id}}/edit"> Edit</a></td>
         </tr>
+
         {{end}}
     </table>
 </body>

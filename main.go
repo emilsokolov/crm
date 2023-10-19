@@ -26,8 +26,8 @@ func main() {
 	}
 
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/product", productHandler)
-	http.HandleFunc("/edit", editHandler)
+	http.HandleFunc("/products/", productHandler)
+	http.HandleFunc("/product/", editHandler)
 	log.Println("Crm started...")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
@@ -52,7 +52,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func productHandler(w http.ResponseWriter, r *http.Request) {
-	idString := r.URL.Query().Get("id")
+	idString := r.URL.Path[len("/products/"):]
 	i, err := strconv.ParseInt(idString, 10, 32)
 	if err != nil {
 		log.Fatal(err)
@@ -60,7 +60,7 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 	id := int(i)
 	product, err := getProduct(id)
 	if err != nil {
-		if err.Error() == "Product Not Found" {
+		if err.Error() == "Product Not Found!" {
 			fmt.Fprintf(w, "Product Not Found")
 		} else {
 			log.Fatal(err)
@@ -71,5 +71,6 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request) {
+
 	fmt.Fprintf(w, "Edit")
 }
