@@ -40,3 +40,20 @@ func getProduct(id int) (Product, error) {
 	}
 	return p, err
 }
+
+func getSells(productId int) ([]Sell, error) {
+	rows, err := db.Query("select product_id, sell_date, quantity from sells where product_id = ?;", productId)
+	if err != nil {
+		return nil, err
+	}
+	sells := []Sell{}
+	for rows.Next() {
+		var s Sell
+		err = rows.Scan(&s.ProductId, &s.Date, &s.Quantity)
+		if err != nil {
+			return nil, err
+		}
+		sells = append(sells, s)
+	}
+	return sells, nil
+}

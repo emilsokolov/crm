@@ -6,14 +6,26 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type ProductPageData struct {
+type ProductsPageData struct {
 	Title    string
 	Products []Product
+}
+
+type ProductPageData struct {
+	Product Product
+	Sells   []Sell
+}
+
+type Sell struct {
+	Date      string
+	Quantity  int
+	ProductId int
 }
 
 var db *sql.DB
@@ -26,6 +38,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/styles.css", cssHandler)
 	http.HandleFunc("/products/", productHandler)
 	http.HandleFunc("/product/", editHandler)
 	log.Println("Crm started...")
@@ -38,17 +51,25 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	t, err := template.ParseFiles("products.html")
+	t, err := template.ParseFiles("templates/products.html")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	data := ProductPageData{
+	data := ProductsPageData{
 		Title:    "Все товары",
 		Products: products,
 	}
 
 	t.Execute(w, data)
+}
+
+func cssHandler(w http.ResponseWriter, r *http.Request) {
+	f, err := os.ReadFile("templates/styles.css")
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.Write(f)
 }
 
 func productHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,8 +87,22 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 	}
-	fmt.Fprintf(w, "Наименование = %s, Остаток = %d, Закупка: %d, Продажа: %d",
-		product.Name, product.Quantity, product.PurchasePrice, product.SellPrice)
+	sells, err := getSells(product.Id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data := ProductPageData{
+		Product: product,
+		Sells:   sells,
+	}
+
+	t, err := template.ParseFiles("templates/product.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	t.Execute(w, data)
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,28 @@
+body{
+    font-family:arial,sans-serif;
+}
+table{
+    border-spacing: 0 15px;
+}
+thead{
+    text-align:left;
+    font-size: 1.4em;
+}
+th{
+    text-align:left;
+    padding: 5px 10px;
+    font-size: 1.2em;
+}
+td{
+    font-size:20px;
+    text-align:center;
+    vertical-align:middle;
+}
+label {
+    margin: 0.1rem;
+    justify-content: space-between;
+}
+#quantity{
+    width: 40px;
+}
+
