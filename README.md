@@ -10,3 +10,9 @@
     - Группировать подажи по клиентам
 - Каталог товаров
 
+## Hot Reloading
+
+```
+go install github.com/cosmtrek/air@latest
+air
+```

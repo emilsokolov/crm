@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<html>
+
 <head>
     <link rel="stylesheet" href="/styles.css">
     <title>{{.Product.Name}}</title>
@@ -22,17 +24,18 @@
                 <th colspan="2">Продажи</th>
             </tr>
         </thead>
-            <tr>
-                <th>Дата</th>
-                <th>Количество</th>
-            </tr>
-            {{range .Sells}}
-            <tr>
+        <tr>
+            <th>Дата</th>
+            <th>Количество</th>
+        </tr>
+        {{range .Sells}}
+        <tr>
 
-                <td>{{.Date}} </td>
-                <td>{{.Quantity}}</td>
-            </tr>
-            {{end}}
+            <td>{{.Date}} </td>
+            <td>{{.Quantity}}</td>
+        </tr>
+        {{end}}
     </table>
 </body>
+
 </html>

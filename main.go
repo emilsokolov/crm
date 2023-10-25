@@ -32,7 +32,7 @@ var db *sql.DB
 
 func main() {
 	var err error
-	db, err = sql.Open("sqlite3", "crm.db")
+	db, err = sql.Open("sqlite3", "db/crm.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,6 +69,7 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	w.Header().Add("Content-Type", "text/css")
 	w.Write(f)
 }
 
