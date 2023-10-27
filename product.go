@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Product struct {
 	Id            int
@@ -10,11 +12,29 @@ type Product struct {
 	SellPrice     int
 }
 
+func (p *Product) Sell(quantity int) error {
+	if quantity < 0 {
+		return fmt.Errorf("quantity must be positive")
+	}
+	if quantity > p.Quantity {
+		return fmt.Errorf("not enough quantity")
+	}
+	p.Quantity -= quantity
+	return nil
+}
+
+func saveProduct(p *Product) error {
+	_, err := db.Exec("update products set quantity = quantity - ? where id = ?;", p.Quantity, p.Id)
+	return err
+}
+
 func getProducts() ([]Product, error) {
 	rows, err := db.Query("select id, name, quantity, purchase_price, sell_price from products;")
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	var products []Product
 	for rows.Next() {
 		p := Product{}
@@ -33,6 +53,8 @@ func getProduct(id int) (Product, error) {
 	if err != nil {
 		return p, err
 	}
+	defer rows.Close()
+
 	if rows.Next() {
 		err = rows.Scan(&p.Id, &p.Name, &p.Quantity, &p.PurchasePrice, &p.SellPrice)
 	} else {
@@ -46,6 +68,8 @@ func getSells(productId int) ([]Sell, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
 	sells := []Sell{}
 	for rows.Next() {
 		var s Sell

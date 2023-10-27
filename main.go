@@ -36,6 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
@@ -75,12 +76,28 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 
 func productHandler(w http.ResponseWriter, r *http.Request) {
 	idString := r.URL.Path[len("/products/"):]
+
 	i, err := strconv.ParseInt(idString, 10, 32)
 	if err != nil {
 		log.Fatal(err)
 	}
 	id := int(i)
 	product, err := getProduct(id)
+
+	if r.Method == "POST" {
+		quantityStr := r.FormValue("quantity")
+		p, err := strconv.ParseInt(quantityStr, 10, 32)
+		if err != nil {
+			log.Fatal(err)
+		}
+		quantity := int(p)
+
+		err = product.Sell(quantity)
+		if err == nil {
+			saveProduct(&product)
+		}
+	}
+
 	if err != nil {
 		if err.Error() == "Product Not Found!" {
 			fmt.Fprintf(w, "Product Not Found")
