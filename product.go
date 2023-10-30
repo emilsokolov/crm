@@ -24,7 +24,7 @@ func (p *Product) Sell(quantity int) error {
 }
 
 func saveProduct(p *Product) error {
-	_, err := db.Exec("update products set quantity = quantity - ? where id = ?;", p.Quantity, p.Id)
+	_, err := db.Exec("update products set quantity = ? where id = ?;", p.Quantity, p.Id)
 	return err
 }
 
