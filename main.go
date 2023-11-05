@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -40,8 +41,7 @@ func main() {
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
-	http.HandleFunc("/products/", productHandler)
-	http.HandleFunc("/product/", editHandler)
+	http.HandleFunc("/products/", productsHandler)
 	log.Println("Crm started...")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
@@ -74,15 +74,42 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(f)
 }
 
-func productHandler(w http.ResponseWriter, r *http.Request) {
-	idString := r.URL.Path[len("/products/"):]
+var productValidPath = regexp.MustCompile("^/products/([0-9]+)(/edit)?$")
 
-	i, err := strconv.ParseInt(idString, 10, 32)
-	if err != nil {
-		log.Fatal(err)
+func productsHandler(w http.ResponseWriter, r *http.Request) {
+	m := productValidPath.FindStringSubmatch(r.URL.Path)
+	if m == nil {
+		http.NotFound(w, r)
+		return
 	}
-	id := int(i)
-	product, err := getProduct(id)
+
+	productID, err := strconv.ParseInt(m[1], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if m[2] == "/edit" {
+		editHandler(w, r, int(productID))
+		return
+	}
+
+	productHandler(w, r, int(productID))
+}
+
+func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
+	product, err := getProduct(productID)
+	if err != nil {
+		log.Print(err)
+
+		if err.Error() == "product not found" {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
 
 	if r.Method == "POST" {
 		quantityStr := r.FormValue("quantity")
@@ -98,16 +125,11 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err != nil {
-		if err.Error() == "Product Not Found!" {
-			fmt.Fprintf(w, "Product Not Found")
-		} else {
-			log.Fatal(err)
-		}
-	}
 	sells, err := getSells(product.Id)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	data := ProductPageData{
@@ -123,7 +145,7 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, data)
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 
-	fmt.Fprintf(w, "Edit")
+	fmt.Fprintf(w, "Edit productID = %d", productID)
 }
