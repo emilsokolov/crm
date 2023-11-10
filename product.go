@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 type Product struct {
@@ -25,6 +26,12 @@ func (p *Product) Sell(quantity int) error {
 
 func saveProduct(p *Product) error {
 	_, err := db.Exec("update products set quantity = ? where id = ?;", p.Quantity, p.Id)
+	return err
+}
+
+func saveSell(productId, quantity int) error {
+	sellDate := time.Now().Format("2006-01-02 15:04:05")
+	_, err := db.Exec("insert into sells(product_id, sell_date, quantity) values (?,?,?);", productId, sellDate, quantity)
 	return err
 }
 
@@ -64,7 +71,7 @@ func getProduct(id int) (Product, error) {
 }
 
 func getSells(productId int) ([]Sell, error) {
-	rows, err := db.Query("select product_id, sell_date, quantity from sells where product_id = ?;", productId)
+	rows, err := db.Query("select product_id, sell_date, quantity from sells where product_id = ? order by sell_date desc;", productId)
 	if err != nil {
 		return nil, err
 	}

@@ -95,6 +95,7 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 		err = product.Sell(quantity)
 		if err == nil {
 			saveProduct(&product)
+			saveSell(product.Id, quantity)
 		}
 	}
 
