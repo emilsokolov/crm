@@ -85,7 +85,8 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 
 	productID, err := strconv.ParseInt(m[1], 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Print(err)
+		http.Error(w, "Oops...", http.StatusInternalServerError)
 		return
 	}
 
