@@ -42,6 +42,7 @@ func main() {
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
 	http.HandleFunc("/products/", productsHandler)
+	http.HandleFunc("/products/new", newHandler)
 	log.Println("Crm started...")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
@@ -150,4 +151,14 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 
 	fmt.Fprintf(w, "Edit productID = %d", productID)
+}
+
+func newHandler(w http.ResponseWriter, r *http.Request) {
+
+	t, err := template.ParseFiles("templates/edit.html")
+	if err != nil {
+		log.Print(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	t.Execute(w, nil)
 }

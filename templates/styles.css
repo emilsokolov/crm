@@ -31,3 +31,11 @@ label {
 #quantity {
     width: 40px;
 }
+
+input {
+    width: 150px;
+}
+
+input[type=submit] {
+    width: 80px;
+}
