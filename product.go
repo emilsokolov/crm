@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"time"
 )
 
@@ -15,10 +15,10 @@ type Product struct {
 
 func (p *Product) Sell(quantity int) error {
 	if quantity < 0 {
-		return fmt.Errorf("quantity must be positive")
+		return errors.New("quantity must be positive")
 	}
 	if quantity > p.Quantity {
-		return fmt.Errorf("not enough quantity")
+		return errors.New("not enough quantity")
 	}
 	p.Quantity -= quantity
 	return nil
@@ -65,7 +65,7 @@ func getProduct(id int) (Product, error) {
 	if rows.Next() {
 		err = rows.Scan(&p.Id, &p.Name, &p.Quantity, &p.PurchasePrice, &p.SellPrice)
 	} else {
-		err = fmt.Errorf("product with id = %d not found", id)
+		err = errors.New("product not found")
 	}
 	return p, err
 }
