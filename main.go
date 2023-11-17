@@ -43,7 +43,7 @@ func main() {
 	http.HandleFunc("/styles.css", cssHandler)
 	http.HandleFunc("/products/", productsHandler)
 	http.HandleFunc("/products/new", newHandler)
-	log.Println("Crm started...")
+	log.Println("Crm started at http://localhost")
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
@@ -156,6 +156,11 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 func newHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles("templates/edit.html")
+	if r.Method == "POST" {
+		if r.FormValue("Cancel") == "Отменить" {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		}
+	}
 	if err != nil {
 		log.Print(w, err.Error(), http.StatusInternalServerError)
 	}
