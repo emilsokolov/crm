@@ -24,8 +24,17 @@ func (p *Product) Sell(quantity int) error {
 	return nil
 }
 
-func saveProduct(p *Product) error {
-	_, err := db.Exec("update products set quantity = ? where id = ?;", p.Quantity, p.Id)
+func saveProduct(p Product) error {
+	updateDate := time.Now().Format("2006-01-02 15:04:05")
+	_, err := db.Exec(`
+update products
+set
+	name = ?,
+	sell_price = ?,
+	purchase_price = ?,
+	quantity = ?,
+	update_date = ?
+where id = ?;`, p.Name, p.SellPrice, p.PurchasePrice, p.Quantity, updateDate, p.Id)
 	return err
 }
 
@@ -87,4 +96,11 @@ func getSells(productId int) ([]Sell, error) {
 		sells = append(sells, s)
 	}
 	return sells, nil
+}
+
+func addProduct(product Product) error {
+	addDate := time.Now().Format("2006-01-02 15:04:05")
+	_, err := db.Exec("insert into products(name,purchase_price, sell_price, quantity, create_date, update_date) values (?,?,?,?,?,?);",
+		product.Name, product.PurchasePrice, product.SellPrice, product.Quantity, addDate, addDate)
+	return err
 }

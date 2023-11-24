@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,6 +20,10 @@ type ProductsPageData struct {
 type ProductPageData struct {
 	Product Product
 	Sells   []Sell
+}
+
+type EditPageData struct {
+	Product Product
 }
 
 type Sell struct {
@@ -123,9 +126,12 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 
 		err = product.Sell(quantity)
 		if err == nil {
-			saveProduct(&product)
+			saveProduct(product)
 			saveSell(product.Id, quantity)
 		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
 
 	sells, err := getSells(product.Id)
@@ -149,21 +155,104 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
+	product, err := getProduct(productID)
+	if err != nil {
+		log.Print(err)
 
-	fmt.Fprintf(w, "Edit productID = %d", productID)
+		if err.Error() == "product not found" {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	if r.Method == "GET" {
+		t, err := template.ParseFiles("templates/edit.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		data := EditPageData{Product: product}
+		err = t.Execute(w, data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else if r.Method == "POST" {
+		if r.FormValue("Save") == "Сохранить" {
+			p, err := parseEditForm(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			p.Id = productID
+
+			err = saveProduct(p)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
 }
 
 func newHandler(w http.ResponseWriter, r *http.Request) {
-
 	t, err := template.ParseFiles("templates/edit.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if r.Method == "POST" {
 		if r.FormValue("Cancel") == "Отменить" {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
-	}
-	if err != nil {
-		log.Print(w, err.Error(), http.StatusInternalServerError)
+		if r.FormValue("Save") == "Сохранить" {
+			p, err := parseEditForm(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			err = addProduct(p)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		}
 	}
 
-	t.Execute(w, nil)
+	data := EditPageData{Product: Product{}}
+	err = t.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func parseEditForm(r *http.Request) (Product, error) {
+	name := r.FormValue("name")
+	quantity := r.FormValue("quantity")
+	sellprice := r.FormValue("sellprice")
+	purchaseprice := r.FormValue("purchaseprice")
+
+	quantityint, err := strconv.ParseInt(quantity, 10, 32)
+	sellpriceint, err := strconv.ParseInt(sellprice, 10, 32)
+	purchasepriceint, err := strconv.ParseInt(purchaseprice, 10, 32)
+
+	if err != nil {
+		return Product{}, err
+	}
+
+	return Product{
+		Name:          name,
+		Quantity:      int(quantityint),
+		SellPrice:     int(sellpriceint),
+		PurchasePrice: int(purchasepriceint),
+	}, nil
 }

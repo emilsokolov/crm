@@ -2,22 +2,28 @@
 
 <head>
     <link rel="stylesheet" href="../styles.css">
-    <title>Редактирование</title> 
+    <title>Редактирование</title>
 </head>
 
 <body>
     <h1>Новый продукт</h1>
-    <form method="POST"> 
-    <p>Артикул: 0 </p>
-    <p><label for="name">Название</label>
-        <input type="text"  name="name"></p>
-    <p><label for="purchaseprice">Закупка</label>
-        <input type="text"  name="purchaseprice"></p>
-     <p><label for="sellprice">Продажа</label>
-         <input type="text"  name="sellprice"></p>
-     <p><label for="quantity">Остаток</label>
-         <input type="text"  name="quantity"></p>
-         <input type="submit" value="Сохранить" name="Save" > <input type="submit" value="Отменить" name="Cancel">
-</form>
+    <form method="POST">
+        <p>Артикул: {{.Product.Id}}</p>
+        <p><label for="name">Название</label>
+            <input type="text" name="name" value="{{.Product.Name}}">
+        </p>
+        <p><label for="purchaseprice">Закупка</label>
+            <input type="text" name="purchaseprice" value="{{.Product.PurchasePrice}}">
+        </p>
+        <p><label for="sellprice">Продажа</label>
+            <input type="text" name="sellprice" value="{{.Product.SellPrice}}">
+        </p>
+        <p><label for="quantity">Остаток</label>
+            <input type="text" name="quantity" value="{{.Product.Quantity}}">
+        </p>
+        <input type="submit" value="Сохранить" name="Save">
+        <input type="submit" value="Отменить" name="Cancel">
+    </form>
 </body>
+
 </html>
