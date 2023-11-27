@@ -10,7 +10,8 @@
     <form method="POST">
         <p>Артикул: {{.Product.Id}}</p>
         <p><label for="name">Название</label>
-            <input type="text" name="name" value="{{.Product.Name}}">
+            <input type="text" name="name" value="{{.Product.Name}}" {{if .NameError}}class ="errorInput"{{end}}>
+            {{if .NameError}}<span class="error">* {{.NameError}}</span>{{end}}
         </p>
         <p><label for="purchaseprice">Закупка</label>
             <input type="text" name="purchaseprice" value="{{.Product.PurchasePrice}}">

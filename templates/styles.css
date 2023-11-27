@@ -39,3 +39,11 @@ input {
 input[type=submit] {
     width: 80px;
 }
+
+.error {
+    color: red;
+}
+
+.errorInput {
+    border: 2px solid red;
+}

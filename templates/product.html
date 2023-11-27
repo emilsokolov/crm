@@ -11,11 +11,14 @@
     <p><a href="/">Каталог</a></p>
     <p><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
     <p>Остаток: {{.Product.Quantity}} </p>
+    <p>Цена продажи: {{.Product.SellPrice}} ₽</p>
+    <p>Цена закупки: {{.Product.PurchasePrice}} ₽</p>
     <p>
     <form method="POST">
         <label for="quantity">Количество:</label>
-        <input type="text" id="quantity" name="quantity">
+        <input type="text" id="quantity" name="quantity" value="{{.Quantity}}">
         <input type="submit" value="Продать"> </p>
+        {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
     </form>
 
 

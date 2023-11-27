@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -18,12 +19,19 @@ type ProductsPageData struct {
 }
 
 type ProductPageData struct {
-	Product Product
-	Sells   []Sell
+	Product       Product
+	Sells         []Sell
+	Quantity      string
+	QuantityError string
 }
 
 type EditPageData struct {
-	Product Product
+	Product            Product
+	NameError          string
+	QuantityError      string
+	PurchasePriceError string
+	SellPriceError     string
+	ParseError         error
 }
 
 type Sell struct {
@@ -116,22 +124,22 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		return
 	}
 
+	data := ProductPageData{}
+
 	if r.Method == "POST" {
-		quantityStr := r.FormValue("quantity")
-		p, err := strconv.ParseInt(quantityStr, 10, 32)
-		if err != nil {
-			log.Fatal(err)
-		}
-		quantity := int(p)
-
-		err = product.Sell(quantity)
+		quantity, err := parseQuantity(r.FormValue("quantity"))
 		if err == nil {
-			saveProduct(product)
-			saveSell(product.Id, quantity)
+			err = product.Sell(quantity)
+			if err == nil {
+				saveProduct(product)
+				saveSell(product.Id, quantity)
+			}
+
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
+		data.QuantityError = err.Error()
 	}
 
 	sells, err := getSells(product.Id)
@@ -141,10 +149,8 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		return
 	}
 
-	data := ProductPageData{
-		Product: product,
-		Sells:   sells,
-	}
+	data.Product = product
+	data.Sells = sells
 
 	t, err := template.ParseFiles("templates/product.html")
 	if err != nil {
@@ -152,6 +158,24 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 	}
 
 	t.Execute(w, data)
+}
+
+func parseQuantity(quantityStr string) (int, error) {
+	if quantityStr == "" {
+		return 0, fmt.Errorf("Поле не должно быть пустым")
+	}
+
+	p, err := strconv.ParseInt(quantityStr, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	quantity := int(p)
+	if quantity <= 0 {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	return quantity, nil
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
@@ -168,91 +192,99 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		return
 	}
 
-	if r.Method == "GET" {
-		t, err := template.ParseFiles("templates/edit.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	if r.Method == "POST" && r.FormValue("Save") == "Сохранить" {
+		data, err := parseEditForm(r)
+		if err == nil {
+			data.Product.Id = productID
 
-		data := EditPageData{Product: product}
-		err = t.Execute(w, data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	} else if r.Method == "POST" {
-		if r.FormValue("Save") == "Сохранить" {
-			p, err := parseEditForm(r)
+			err = saveProduct(data.Product)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			p.Id = productID
-
-			err = saveProduct(p)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
-
-		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
-}
 
-func newHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("templates/edit.html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if r.Method == "POST" {
-		if r.FormValue("Cancel") == "Отменить" {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-		}
-		if r.FormValue("Save") == "Сохранить" {
-			p, err := parseEditForm(r)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
+	data := EditPageData{Product: product}
+	err = t.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
-			err = addProduct(p)
+func newHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
+	data := EditPageData{}
+
+	if r.Method == "POST" {
+		data, err = parseEditForm(r)
+		if err == nil {
+			err = addProduct(data.Product)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
 		}
 	}
 
-	data := EditPageData{Product: Product{}}
+	t, err := template.ParseFiles("templates/edit.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	err = t.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func parseEditForm(r *http.Request) (Product, error) {
+func parseEditForm(r *http.Request) (EditPageData, error) {
+	data := EditPageData{}
+
 	name := r.FormValue("name")
+	if name == "" {
+		data.NameError = "Имя не заполнено"
+		data.ParseError = fmt.Errorf("name is empty")
+	}
+
 	quantity := r.FormValue("quantity")
 	sellprice := r.FormValue("sellprice")
 	purchaseprice := r.FormValue("purchaseprice")
 
 	quantityint, err := strconv.ParseInt(quantity, 10, 32)
-	sellpriceint, err := strconv.ParseInt(sellprice, 10, 32)
-	purchasepriceint, err := strconv.ParseInt(purchaseprice, 10, 32)
-
 	if err != nil {
-		return Product{}, err
+		data.ParseError = err
 	}
 
-	return Product{
-		Name:          name,
-		Quantity:      int(quantityint),
-		SellPrice:     int(sellpriceint),
-		PurchasePrice: int(purchasepriceint),
-	}, nil
+	sellpriceint, err := strconv.ParseInt(sellprice, 10, 32)
+	if err != nil {
+		data.ParseError = err
+	}
+
+	purchasepriceint, err := strconv.ParseInt(purchaseprice, 10, 32)
+	if err != nil {
+		data.ParseError = err
+	}
+
+	if err == nil {
+		data.Product = Product{
+			Name:          name,
+			Quantity:      int(quantityint),
+			SellPrice:     int(sellpriceint),
+			PurchasePrice: int(purchasepriceint),
+		}
+	}
+
+	return data, data.ParseError
 }
