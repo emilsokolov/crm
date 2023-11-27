@@ -9,6 +9,7 @@
 <body>
     <h1>{{.Product.Name}}</h1>
     <p><a href="/">Каталог</a></p>
+    <p><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
     <p>Остаток: {{.Product.Quantity}} </p>
     <p>
     <form method="POST">

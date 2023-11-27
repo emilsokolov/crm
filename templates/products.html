@@ -8,14 +8,15 @@
 <body>
     <table>
         <tr>
-            <th>Name</th>
-            <th>Quantity</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Цена продажи</th>
         </tr>
         {{range .Products}}
         <tr>
             <td><a href="/products/{{.Id}}">{{.Name}}<a></td>
             <td>{{.Quantity}}</td>
-            <td><a href="/products/{{.Id}}/edit"> Edit</a></td>
+            <td>{{.SellPrice}}</td>
         </tr>
 
         {{end}}
