@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "tmp\\crm.exe"
-  cmd = "go build -o ./tmp/crm.exe ."
+  bin = "crm.exe"
+  cmd = "go build -o crm.exe"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
