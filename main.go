@@ -259,24 +259,30 @@ func parseEditForm(r *http.Request) (EditPageData, error) {
 	}
 
 	quantity := r.FormValue("quantity")
+	if quantity == " " {
+		data.QuantityError = "Поле не должно быть пустым"
+	}
 	sellprice := r.FormValue("sellprice")
+	if sellprice == " " {
+		data.SellPriceError = "Поле не должно быть пустым"
+	}
 	purchaseprice := r.FormValue("purchaseprice")
+	if purchaseprice == " " {
+		data.PurchasePriceError = "Поле не должно быть пустым"
+	}
 
-	quantityint, err := strconv.ParseInt(quantity, 10, 32)
+	quantityint, err := parseQuantityInt(quantity)
 	if err != nil {
 		data.ParseError = err
 	}
-
-	sellpriceint, err := strconv.ParseInt(sellprice, 10, 32)
+	sellpriceint, err := parseSellPriceInt(sellprice)
 	if err != nil {
 		data.ParseError = err
 	}
-
-	purchasepriceint, err := strconv.ParseInt(purchaseprice, 10, 32)
+	purchasepriceint, err := parsePurchasePriceInt(purchaseprice)
 	if err != nil {
 		data.ParseError = err
 	}
-
 	if err == nil {
 		data.Product = Product{
 			Name:          name,
@@ -287,4 +293,43 @@ func parseEditForm(r *http.Request) (EditPageData, error) {
 	}
 
 	return data, data.ParseError
+}
+func parseQuantityInt(quantityint string) (int, error) {
+	p, err := strconv.ParseInt(quantityint, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+	quantity := int(p)
+	if quantity <= 0 {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	return quantity, nil
+}
+func parseSellPriceInt(sellpriceint string) (int, error) {
+
+	p, err := strconv.ParseInt(sellpriceint, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	sellprice := int(p)
+	if sellprice <= 0 {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	return sellprice, nil
+}
+func parsePurchasePriceInt(purchasepriceint string) (int, error) {
+	p, err := strconv.ParseInt(purchasepriceint, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	purchaseprice := int(p)
+	if purchaseprice <= 0 {
+		return 0, fmt.Errorf("Ожидается целое положительное число")
+	}
+
+	return purchaseprice, nil
 }
