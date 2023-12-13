@@ -8,14 +8,14 @@
 
 <body>
     <h1>{{.Product.Name}}</h1>
-    <p><a href="/">Каталог</a></p>
-    <p><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
-    <p>Остаток: {{.Product.Quantity}} </p>
-    <p>Цена продажи: {{.Product.SellPrice}} ₽</p>
-    <p>Цена закупки: {{.Product.PurchasePrice}} ₽</p>
+    <p class = "edit1"><a href="/">Каталог</a></p>
+    <p class = "edit1"><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
+    <p class = "info">Остаток: {{.Product.Quantity}} </p>
+    <p class = "info">Цена продажи: {{.Product.SellPrice}} ₽</p>
+    <p class = "info">Цена закупки: {{.Product.PurchasePrice}} ₽</p>
     <p>
     <form method="POST">
-        <label for="quantity">Количество:</label>
+        <label for="quantity" class = "infoquantity">Количество:</label>
         <input type="text" id="quantity" name="quantity" value="{{.Quantity}}">
         <input type="submit" value="Продать"> </p>
         {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
@@ -25,18 +25,18 @@
     <table class = "table2">
         <thead>
             <tr>
-                <th colspan="2">Продажи</th>
+                <th colspan="2" class = "SellsName">Продажи</th>
             </tr>
         </thead>
         <tr>
-            <th>Дата</th>
-            <th>Количество</th>
+            <th class="SellsName">Дата</th>
+            <th class="SellsName">Количество</th>
         </tr>
         {{range .Sells}}
         <tr>
 
-            <td>{{.Date}} </td>
-            <td>{{.Quantity}}</td>
+            <td class = "sellinfo">{{.Date}} </td>
+            <td class = "sellinfo">{{.Quantity}}</td>
         </tr>
         {{end}}
     </table>

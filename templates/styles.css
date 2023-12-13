@@ -54,7 +54,7 @@ input[type=submit] {
     }
     
     table {
-        border-spacing: 0 50px;
+        border-spacing: 0 20px;
     }
     
     thead {
@@ -106,5 +106,27 @@ input[type=submit] {
     }
     .table2 {
         font-size: 40px;
+        border-spacing: 7px 5px;
+    }
+    .edit1{
+        font-size: medium;
+    }
+    .SellsName{
+        font-size: 20px;
+    }
+    .sellinfo{
+        font-size:20px;
+    }
+    .info{
+        font-size: medium;
+    }
+    .infoquantity{
+         font-size: medium;
+    }
+    .newproduct{
+        font-size: large;
+    }
+    .articool{
+        font-size: 25px;
     }
     }

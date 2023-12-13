@@ -8,20 +8,20 @@
 <body>
     <h1>{{.Product.Name}}</h1>
     <form method="POST">
-        <p>Артикул: {{.Product.Id}}</p>
-        <p><label for="name">Название</label>
+        <p class = "articool">Артикул: {{.Product.Id}}</p>
+        <p class = "infoquantity"><label for="name">Название</label>
             <input type="text" name="name" value="{{.Product.Name}}" {{if .NameError}}class ="errorInput"{{end}}>
             {{if .NameError}}<span class="error">* {{.NameError}}</span>{{end}}
         </p>
-        <p><label for="purchaseprice">Закупка</label>
+        <p class = "infoquantity"><label for="purchaseprice">Закупка</label>
             <input type="text" name="purchaseprice" value="{{.Product.PurchasePrice}}" {{if .PurchasePriceError}}class ="errorInput"{{end}}>
             {{if .PurchasePriceError}}<span class="error">* {{.PurchasePriceError}}</span>{{end}}
         </p>
-        <p><label for="sellprice">Продажа</label>
+        <p class = "infoquantity"><label for="sellprice">Продажа</label>
             <input type="text" name="sellprice" value="{{.Product.SellPrice}}" {{if .SellPriceError}}class ="errorInput"{{end}}>
             {{if .SellPriceError}}<span class="error">* {{.SellPriceError}}</span>{{end}}
         </p>
-        <p><label for="quantity">Остаток</label>
+        <p class = "infoquantity"><label for="quantity">Остаток</label>
             <input type="text" name="quantity" value="{{.Product.Quantity}}" {{if .QuantityError}}class ="errorInput"{{end}}>
             {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
         </p>
