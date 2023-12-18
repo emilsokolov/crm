@@ -86,7 +86,7 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(f)
 }
 
-var productValidPath = regexp.MustCompile("^/products/([0-9]+)(/edit)?$")
+var productValidPath = regexp.MustCompile("^/products/([0-9]+)(/edit|/delete)?$")
 
 func productsHandler(w http.ResponseWriter, r *http.Request) {
 	m := productValidPath.FindStringSubmatch(r.URL.Path)
@@ -102,8 +102,11 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if m[2] == "/edit" {
+	if m[2] == "/edit" && r.FormValue("Save") == "Сохранить" {
 		editHandler(w, r, int(productID))
+		return
+	} else if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
+		deleteHandler(w, r, int(productID))
 		return
 	}
 
@@ -192,7 +195,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		return
 	}
 
-	if r.Method == "POST" && r.FormValue("Save") == "Сохранить" {
+	if r.Method == "POST" {
 		data, err := parseEditForm(r)
 		if err == nil {
 			data.Product.Id = productID
@@ -218,6 +221,28 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func deleteHandler(w http.ResponseWriter, r *http.Request, productID int) {
+	product, err := getProduct(productID)
+	if err != nil {
+		log.Print(err)
+
+		if err.Error() == "product not found" {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	err = deleteProduct(product.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func newHandler(w http.ResponseWriter, r *http.Request) {

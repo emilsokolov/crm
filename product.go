@@ -38,6 +38,13 @@ where id = ?;`, p.Name, p.SellPrice, p.PurchasePrice, p.Quantity, updateDate, p.
 	return err
 }
 
+func deleteProduct(productID int) error {
+	_, err := db.Exec(`
+delete from products
+where id = ?;`, productID)
+	return err
+}
+
 func saveSell(productId, quantity int) error {
 	sellDate := time.Now().Format("2006-01-02 15:04:05")
 	_, err := db.Exec("insert into sells(product_id, sell_date, quantity) values (?,?,?);", productId, sellDate, quantity)
