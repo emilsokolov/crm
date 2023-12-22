@@ -191,6 +191,18 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 
 		return
 	}
+	if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
+		data, err := parseEditForm(r)
+		if err == nil {
+			data.Product.Id = productID
+			err = deleteProduct(data.Product)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		}
+	}
 
 	if r.Method == "POST" && r.FormValue("Save") == "Сохранить" {
 		data, err := parseEditForm(r)

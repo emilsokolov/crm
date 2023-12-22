@@ -3,6 +3,7 @@
 <head>
     <link rel="stylesheet" href="/styles.css">
     <title>Редактирование</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
@@ -26,7 +27,7 @@
             {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
         </p>
         <input type="submit" value="Сохранить" name="Save">
-        <input type="button" value="Отменить" name="Cancel" onclick="location.href='/'">
+        <input type="button" value="Удалить" name="Delete" onclick="location.href='/'">
     </form>
 </body>
 
