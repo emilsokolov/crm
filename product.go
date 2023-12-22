@@ -37,17 +37,6 @@ set
 where id = ?;`, p.Name, p.SellPrice, p.PurchasePrice, p.Quantity, updateDate, p.Id)
 	return err
 }
-func deleteProduct(p Product) error {
-	_, err := db.Exec(`
-	delete from products
-		name = ?,
-		sell_price = ?,
-		purchase_price = ?,
-		quantity = ?,
-		update_date = ?
-	where id = ?;`, p.Name, p.SellPrice, p.PurchasePrice, p.Quantity, p.Id)
-	return err
-}
 
 func deleteProduct(productID int) error {
 	_, err := db.Exec(`

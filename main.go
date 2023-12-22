@@ -105,7 +105,10 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	if m[2] == "/edit" && r.FormValue("Save") == "Сохранить" {
 		editHandler(w, r, int(productID))
 		return
-	} else if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
+	} else if m[2] == "/delete" {
+		if r.Method != "POST" {
+			http.NotFound(w, r)
+		}
 		deleteHandler(w, r, int(productID))
 		return
 	}
@@ -194,7 +197,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 
 		return
 	}
-	if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
+	/*if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
 		data, err := parseEditForm(r)
 		if err == nil {
 			data.Product.Id = productID
@@ -205,7 +208,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
 			}
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		}
-	}
+	}*/
 
 	if r.Method == "POST" {
 		data, err := parseEditForm(r)
