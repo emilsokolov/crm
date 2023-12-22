@@ -1,5 +1,6 @@
 body {
     font-family: arial, sans-serif;
+    margin: 8px 20px;
 }
 
 table {
@@ -124,7 +125,7 @@ input[type=submit] {
          font-size: medium;
     }
     .newproduct{
-        font-size: 25px;
+        font-size: large;
     }
     .articool{
         font-size: 25px;
