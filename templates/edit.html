@@ -29,7 +29,7 @@
             {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
         </p>
         <input type="submit" value="Сохранить" name="Save">
-        <input type="submit" formaction="/products/{{.Id}}/delete" value="Удалить" name="Delete">
+        <input type="submit" formaction="/products/{{.Product.Id}}/delete" value="Удалить" name="Delete">
     </form>
 </body>
 
