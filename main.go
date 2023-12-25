@@ -52,6 +52,7 @@ func main() {
 
 	http.HandleFunc("/{$}", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
+	http.HandleFunc("/favicon.ico", icoHandler)
 	http.HandleFunc("/products/{id}", productHandler)
 	http.HandleFunc("/products/new", newHandler)
 	http.HandleFunc("/products/{id}/edit", editHandler)
@@ -85,6 +86,15 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	w.Header().Add("Content-Type", "text/css")
+	w.Write(f)
+}
+
+func icoHandler(w http.ResponseWriter, r *http.Request) {
+	f, err := os.ReadFile("templates/favicon.ico")
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.Header().Add("Content-Type", "image/x-icon")
 	w.Write(f)
 }
 
