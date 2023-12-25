@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -49,7 +50,7 @@ func main() {
 	}
 	defer db.Close()
 
-	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/{$}", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
 	http.HandleFunc("/products/{id}", productHandler)
 	http.HandleFunc("/products/new", newHandler)
@@ -91,14 +92,14 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		log.Print("productHander: parse id: ", err)
+		log.Print("productHander: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	product, err := getProduct(int(productID))
 	if err != nil {
-		log.Print(err)
+		log.Print("productHander: ", err)
 
 		if err.Error() == "product not found" {
 			http.NotFound(w, r)
@@ -123,7 +124,7 @@ func productHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-
+		data.Quantity = r.FormValue("quantity")
 		data.QuantityError = err.Error()
 	}
 
@@ -167,7 +168,7 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		log.Print("editHandler: parse id: ", err)
+		log.Print("editHandler: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -210,11 +211,13 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.Execute(w, data)
+	var b strings.Builder
+	err = t.Execute(&b, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Write([]byte(b.String()))
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +231,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	product, err := getProduct(int(productID))
 	if err != nil {
-		log.Print(err)
+		log.Print("deleteHandler: ", err)
 
 		if err.Error() == "product not found" {
 			http.NotFound(w, r)
@@ -241,7 +244,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = deleteProduct(product.Id)
 	if err != nil {
-		log.Print(err)
+		log.Print("deleteHandler: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
