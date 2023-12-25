@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 	"strconv"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -50,10 +50,12 @@ func main() {
 	}
 	defer db.Close()
 
-	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/{$}", rootHandler)
 	http.HandleFunc("/styles.css", cssHandler)
-	http.HandleFunc("/products/", productsHandler)
+	http.HandleFunc("/products/{id}", productHandler)
 	http.HandleFunc("/products/new", newHandler)
+	http.HandleFunc("/products/{id}/edit", editHandler)
+	http.HandleFunc("POST /products/{id}/delete", deleteHandler)
 	log.Println("Crm started at http://localhost:8080/")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -86,40 +88,18 @@ func cssHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(f)
 }
 
-var productValidPath = regexp.MustCompile("^/products/([0-9]+)(/edit|/delete)?$")
-
-func productsHandler(w http.ResponseWriter, r *http.Request) {
-	m := productValidPath.FindStringSubmatch(r.URL.Path)
-	if m == nil {
-		http.NotFound(w, r)
-		return
-	}
-
-	productID, err := strconv.ParseInt(m[1], 10, 64)
+func productHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		log.Print(err)
-		http.Error(w, "Oops...", http.StatusInternalServerError)
+		log.Print("productHander: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if m[2] == "/edit" && r.FormValue("Save") == "Сохранить" {
-		editHandler(w, r, int(productID))
-		return
-	} else if m[2] == "/delete" {
-		if r.Method != "POST" {
-			http.NotFound(w, r)
-		}
-		deleteHandler(w, r, int(productID))
-		return
-	}
-
-	productHandler(w, r, int(productID))
-}
-
-func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
-	product, err := getProduct(productID)
+	product, err := getProduct(int(productID))
 	if err != nil {
-		log.Print(err)
+		log.Print("productHander: ", err)
 
 		if err.Error() == "product not found" {
 			http.NotFound(w, r)
@@ -130,7 +110,7 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 		return
 	}
 
-	data := ProductPageData{}
+	var data ProductPageData
 
 	if r.Method == "POST" {
 		quantity, err := parseQuantity(r.FormValue("quantity"))
@@ -144,7 +124,7 @@ func productHandler(w http.ResponseWriter, r *http.Request, productID int) {
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
-
+		data.Quantity = r.FormValue("quantity")
 		data.QuantityError = err.Error()
 	}
 
@@ -184,91 +164,39 @@ func parseQuantity(quantityStr string) (int, error) {
 	return quantity, nil
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request, productID int) {
-	product, err := getProduct(productID)
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	productID, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		log.Print(err)
-
-		if err.Error() == "product not found" {
-			http.NotFound(w, r)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		log.Print("editHandler: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	/*if r.Method == "POST" && r.FormValue("Delete") == "Удалить" {
-		data, err := parseEditForm(r)
-		if err == nil {
-			data.Product.Id = productID
-			err = deleteProduct(data.Product)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-		}
-	}*/
 
-	if r.Method == "POST" {
-		data, err := parseEditForm(r)
+	var data EditPageData
+
+	if r.Method == "GET" {
+		product, err := getProduct(int(productID))
+		if err != nil {
+			log.Print("editHander: getProduct: ", err)
+
+			if err.Error() == "product not found" {
+				http.NotFound(w, r)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+
+			return
+		}
+		data.Product = product
+	} else if r.Method == "POST" {
+		data, err = parseEditForm(r)
 		if err == nil {
-			data.Product.Id = productID
+			data.Product.Id = int(productID)
 
 			err = saveProduct(data.Product)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-		}
-	}
-
-	t, err := template.ParseFiles("templates/edit.html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data := EditPageData{Product: product}
-	err = t.Execute(w, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func deleteHandler(w http.ResponseWriter, r *http.Request, productID int) {
-	product, err := getProduct(productID)
-	if err != nil {
-		log.Print(err)
-
-		if err.Error() == "product not found" {
-			http.NotFound(w, r)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		return
-	}
-
-	err = deleteProduct(product.Id)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
-}
-
-func newHandler(w http.ResponseWriter, r *http.Request) {
-	var err error
-	data := EditPageData{}
-
-	if r.Method == "POST" {
-		data, err = parseEditForm(r)
-		if err == nil {
-			err = addProduct(data.Product)
-			if err != nil {
+				log.Print("editHander: saveProduct: ", err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -283,14 +211,81 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.Execute(w, data)
+	var b strings.Builder
+	err = t.Execute(&b, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(b.String()))
+}
+
+func deleteHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	productID, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	product, err := getProduct(int(productID))
+	if err != nil {
+		log.Print("deleteHandler: ", err)
+
+		if err.Error() == "product not found" {
+			http.NotFound(w, r)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	err = deleteProduct(product.Id)
+	if err != nil {
+		log.Print("deleteHandler: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func newHandler(w http.ResponseWriter, r *http.Request) {
+	var data EditPageData
+
+	if r.Method == "POST" {
+		var err error
+		data, err = parseEditForm(r)
+		if err == nil {
+			err = addProduct(data.Product)
+			if err != nil {
+				log.Print("newHander: addProduct: ", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
+	}
+
+	t, err := template.ParseFiles("templates/edit.html")
+	if err != nil {
+		log.Print("newHander: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = t.Execute(w, data)
+	if err != nil {
+		log.Print("newHander: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
 func parseEditForm(r *http.Request) (EditPageData, error) {
-	data := EditPageData{}
+	var data EditPageData
 
 	name := r.FormValue("name")
 	if name == "" {
