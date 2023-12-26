@@ -10,24 +10,24 @@
 
 <body>
     <h1>{{.Product.Name}}</h1>
-    <p class = "edit1"><a href="/">Каталог</a></p>
-    <p class = "edit1"><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
-    <p class = "info">Остаток: {{.Product.Quantity}} </p>
-    <p class = "info">Цена продажи: {{.Product.SellPrice}} ₽</p>
-    <p class = "info">Цена закупки: {{.Product.PurchasePrice}} ₽</p>
+    <p class="edit1"><a href="/">Каталог</a></p>
+    <p class="edit1"><a href="/products/{{.Product.Id}}/edit"> Редактировать</a></p>
+    <p class="info">Остаток: {{.Product.Quantity}} </p>
+    <p class="info">Цена продажи: {{.Product.SellPrice}} ₽</p>
+    <p class="info">Цена закупки: {{.Product.PurchasePrice}} ₽</p>
     <p>
     <form method="POST">
-        <label for="quantity" class = "infoquantity">Количество:</label>
+        <label for="quantity" class="infoquantity">Количество:</label>
         <input type="number" id="quantity" inputmode="numeric" name="quantity" value="{{.Quantity}}">
         <input type="submit" value="Продать"> </p>
         {{if .QuantityError}}<span class="error">* {{.QuantityError}}</span>{{end}}
     </form>
 
 
-    <table class = "table2">
+    <table class="table2">
         <thead>
             <tr>
-                <th colspan="2" class = "SellsName">Продажи</th>
+                <th colspan="2" class="SellsName">Продажи</th>
             </tr>
         </thead>
         <tr>
@@ -37,8 +37,8 @@
         {{range .Sells}}
         <tr>
 
-            <td class = "sellinfo">{{.Date}} </td>
-            <td class = "sellinfo">{{.Quantity}}</td>
+            <td class="sellinfo">{{.Date}} </td>
+            <td class="sellinfo">{{.Quantity}}</td>
         </tr>
         {{end}}
     </table>
